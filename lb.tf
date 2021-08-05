@@ -1,19 +1,11 @@
-resource "aws_eip" "nginx-eip" {
-  vpc = true
-  tags = {
-    Name = "nginx-eip"
-  }
-}
-
 resource "aws_lb" "nginx-lb" {
-  name                       = "nginx-lb"
-  internal                   = false
-  load_balancer_type         = "network"
-  enable_deletion_protection = false
-  subnet_mapping {
-    subnet_id     = aws_subnet.public.id
-    allocation_id = aws_eip.nginx-eip.id
-  }
+  name = "nginx-lb"
+
+  load_balancer_type               = "network"
+  internal                         = false
+  subnets                          = [aws_subnet.public.id]
+  enable_cross_zone_load_balancing = true
+  enable_deletion_protection       = false
   tags = {
     Environment = "nginx_lb"
   }
@@ -25,10 +17,6 @@ resource "aws_lb_target_group" "http" {
   port     = 80
   protocol = "TCP"
   vpc_id   = aws_vpc.nginx-vpc.id
-  stickiness {
-    enabled = false
-    type    = "lb_cookie"
-  }
 }
 
 resource "aws_lb_target_group_attachment" "http" {
@@ -70,10 +58,6 @@ resource "aws_lb_target_group" "https" {
   port     = 443
   protocol = "TCP"
   vpc_id   = aws_vpc.nginx-vpc.id
-  stickiness {
-    enabled = false
-    type    = "lb_cookie"
-  }
 }
 
 resource "aws_lb_listener" "ssh" {
@@ -98,8 +82,4 @@ resource "aws_lb_target_group" "ssh" {
   port     = 22
   protocol = "TCP"
   vpc_id   = aws_vpc.nginx-vpc.id
-  stickiness {
-    enabled = false
-    type    = "lb_cookie"
-  }
 }
